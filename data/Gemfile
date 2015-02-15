@@ -1,0 +1,6 @@
+source 'https://ruby.taobao.org'
+# source 'https://rubygems.org'
+# source 'http://rubygems.delivery.realestate.com.au'
+
+gem 'clamp'
+gem 'rake'

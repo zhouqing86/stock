@@ -1,0 +1,4 @@
+desc 'Build the gem'
+task :stocks do
+  puts "To be defined================="
+end

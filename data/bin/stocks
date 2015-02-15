@@ -1,0 +1,30 @@
+#!/usr/bin/env ruby
+# encoding: utf-8
+
+$LOAD_PATH << File.expand_path('../../lib', __FILE__)
+
+require 'clamp'
+
+$stdout.sync = true
+$stderr.sync = true
+module Stock
+	class StockCommand < Clamp::Command
+	    option '--config', 'CONFIG', 'configuration file', multivalued: true
+	    option '--debug', :flag, 'enable debugging', attribute_name: :debug
+
+	    subcommand 'version', 'Display the program version' do
+	      def execute
+	        print "To be defined==============\n"
+	      end
+	    end
+
+	end
+end
+
+begin
+  Stock::StockCommand.run(
+    File.basename($PROGRAM_NAME), ARGV)
+rescue Exception => e
+	print e.inspect
+	#todo
+end
