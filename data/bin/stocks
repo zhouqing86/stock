@@ -20,15 +20,21 @@ module Stock
 	      end
       end
 
-      subcommand 'ss', 'Persist the shanghai stock market to database' do
+      subcommand 'sh', 'Persist the shanghai stock market to database' do
         def execute
-          service.persist_ss_stocks
+          service.persist_sh_stocks
         end
       end
 
       subcommand 'sz', 'Persist the shenzhen stock market to database' do
         def execute
           service.persist_sz_stocks
+        end
+      end
+
+      subcommand 'transaction', 'Persist current day active stock info' do
+        def execute
+          service.persist_stocks_info
         end
       end
     private

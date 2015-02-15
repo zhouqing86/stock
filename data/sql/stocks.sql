@@ -4,7 +4,7 @@ CREATE DATABASE IF NOT EXISTS stocks;
 use stocks;
 
 CREATE TABLE IF NOT EXISTS stock(
-  id int(12) NOT NULL,
+  id varchar(12) NOT NULL,
   name varchar(32),
   code varchar(8),
   market varchar(4),
@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS stock(
 
 CREATE TABLE IF NOT EXISTS transaction(
     id int(32) NOT NULL auto_increment,
-    stock_id int(12) NOT NULL, 
+    stock_id varchar(12) NOT NULL, 
     open decimal(10,2),
 	closeprev decimal(10,2),
 	close decimal(10,2),
@@ -44,6 +44,7 @@ CREATE TABLE IF NOT EXISTS transaction(
 	sell5amount int(16),
 	sell5price decimal(10,2),
 	date DATE,
+	enter_date DATE,
 	time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 	PRIMARY KEY  (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;

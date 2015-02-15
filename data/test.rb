@@ -16,16 +16,16 @@ ActiveRecord::Base.establish_connection(
 # stock = Stock.find(600000)
 # puts stock.name
 
-agent = Mechanize.new
-page = agent.get('http://www.shdjt.com/sh.htm')
-trs = page.search('#senfe').search('tr')
-trs.each { |tr|
-  tds = tr.search("td")
-  no =  tds.first.inner_text.to_i
-  next if no==0
-  id, name, business = tds[1].inner_text, tds[2].search('a').first.inner_text, tds[3].inner_text
-  puts "#{tds[1].inner_text},#{tds[2].search('a').first.inner_text},#{tds[3].inner_text}"
-}
+# agent = Mechanize.new
+# page = agent.get('http://www.shdjt.com/sh.htm')
+# trs = page.search('#senfe').search('tr')
+# trs.each { |tr|
+#   tds = tr.search("td")
+#   no =  tds.first.inner_text.to_i
+#   next if no==0
+#   id, name, business = tds[1].inner_text, tds[2].search('a').first.inner_text, tds[3].inner_text
+#   puts "#{tds[1].inner_text},#{tds[2].search('a').first.inner_text},#{tds[3].inner_text}"
+# }
 # page.search('#senfe').search('tr')[5].search("td").first.inner_text
 # puts "#{page.methods}"
 # text = table.methods
@@ -37,3 +37,11 @@ trs.each { |tr|
 # puts "#{doc.inspect}"
 # table = doc.search("#senfe")
 # puts "#{table.inspect}"
+
+agent = Mechanize.new
+page = agent.get('http://hq.sinajs.cn/list=sh601006')
+puts page.body.gsub("\"","").split(",")
+
+Stock.all.each{ |stock|
+  puts stock.id
+}
