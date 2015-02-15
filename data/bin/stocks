@@ -4,6 +4,8 @@
 $LOAD_PATH << File.expand_path('../../lib', __FILE__)
 
 require 'clamp'
+require 'version'
+require 'service'
 
 $stdout.sync = true
 $stderr.sync = true
@@ -14,16 +16,35 @@ module Stock
 
 	    subcommand 'version', 'Display the program version' do
 	      def execute
-	        print "To be defined==============\n"
+	        print "version #{Stock::Version::VERSION}\n"
 	      end
-	    end
+      end
 
+      subcommand 'ss', 'Persist the shanghai stock market to database' do
+        def execute
+          service.persist_ss_stocks
+        end
+      end
+
+      subcommand 'sz', 'Persist the shenzhen stock market to database' do
+        def execute
+          service.persist_sz_stocks
+        end
+      end
+    private
+      def service
+        service_class.new
+      end
+
+      def service_class
+        context.fetch(:service_class)
+      end
 	end
 end
 
 begin
   Stock::StockCommand.run(
-    File.basename($PROGRAM_NAME), ARGV)
+    File.basename($PROGRAM_NAME), ARGV, service_class: Stock::Service)
 rescue Exception => e
 	print e.inspect
 	#todo
