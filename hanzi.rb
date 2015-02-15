@@ -421,7 +421,7 @@ def write_into_daima file1, file2, line
       arr = line.split(" ")
       daima = get_daima(arr[1])
       puts("#{arr[1]},#{daima}")
-      file1.puts "#{arr[0]} #{arr[1]} #{daima}"
+      file1.puts "#{arr[0]} #{arr[1]} #{daima.gsub('*','')}"
       file2.puts "setSymbolLookup(#{daima.gsub('*','')}=list(name='#{arr[0]}.ss',src='yahoo'))"
       file2.puts "getSymbols(\"#{daima.gsub('*','')}\")"
 end
