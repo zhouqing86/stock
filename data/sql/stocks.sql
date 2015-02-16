@@ -1,3 +1,6 @@
+#mysqldump
+#mysqldump -uroot -p stocks stock> sql/stock_dump.sql
+#
 
 -- DROP DATABASE if exists stocks;
 CREATE DATABASE IF NOT EXISTS stocks;
