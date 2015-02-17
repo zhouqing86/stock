@@ -24,31 +24,32 @@
 (22, 23), (24, 25), (26,27), (28, 29)分别为“卖二”至“卖四的情况”
 30：”2008-01-11″，日期；
 31：”15:05:32″，时间
+mysql> select now(),sysdate(),curdate(),curtime(),unix_timestamp()\G;  
+*************************** 1. row ***************************  
+           now(): 2012-09-23 07:00:05  
+       sysdate(): 2012-09-23 07:00:05  
+       curdate(): 2012-09-23  
+       curtime(): 07:00:05  
+unix_timestamp(): 1348408805  
+insert into stock values(600000,"浦发银行","PFYH","ss",curdate());
 
-open
-closeprev
-close
-High
-Low
-amount
-volume
-buy1amount
-buy1price
-buy2amount
-buy2price
-buy3amount
-buy3price
-buy4amount
-buy4price
-buy5amount
-buy5price
-sell1amount
-sell1price
-sell2amount
-sell2price
-sell3amount
-sell3price
-sell4amount
-sell4price
-sell5amount
-sell5price
+CREATE TABLE IF NOT EXISTS transaction(
+    id int(32) NOT NULL auto_increment,
+    stock_id int(12) NOT NULL, 
+    open decimal(10,2),
+	closeprev decimal(10,2),
+	close decimal(10,2),
+	High decimal(10,2),
+	Low decimal(10,2),
+	amount int(32),
+	volume int(32),
+
+	PRIMARY KEY  (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+con <- dbConnect(MySQL(),
+                 user='root',
+                 password='',
+                 dbname='stocks',
+                 host="localhost") ＃ 主机地址

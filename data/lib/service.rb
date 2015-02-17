@@ -4,6 +4,9 @@ require 'mysql2'
 require 'active_record'
 require 'hanzi_code'
 require 'transaction'
+require 'yahoo_record_ss'
+require 'yahoo_record_sz'
+require 'csv'
 
 module Stock
   class Service
@@ -11,9 +14,9 @@ module Stock
 
     def initialize
       ActiveRecord::Base.establish_connection(
-          :adapter=>"mysql2",
-          :host=>"localhost",
-          :database=>"stocks")
+          :adapter => "mysql2",
+          :host => "localhost",
+          :database => "stocks")
     end
 
     def persist_stocks
@@ -22,19 +25,19 @@ module Stock
     end
 
     def persist_sh_stocks
-      persist_stocks 'http://www.shdjt.com/sh.htm',"sh"
+      persist_stocks 'http://www.shdjt.com/sh.htm', "sh"
     end
 
-    def persist_stocks url,market
+    def persist_stocks url, market
       agent = Mechanize.new
       page = agent.get(url)
       trs = page.search('#senfe').search('tr')
       trs.each { |tr|
         tds = tr.search("td")
-        no =  tds.first.inner_text.to_i
+        no = tds.first.inner_text.to_i
         next if no==0
         id = tds[1].inner_text
-        stock = Stock.find_or_initialize_by(id:id)
+        stock = Stock.find_or_initialize_by(id: id)
         stock.market = market
         stock.id, stock.name, stock.business = id, tds[2].search('a').first.inner_text, tds[3].inner_text
         stock.code = code(stock.name)
@@ -51,8 +54,8 @@ module Stock
         begin
           url = "#{base}#{stock.market}#{stock.id}"
           page = agent.get(url)
-          stock_info = page.body.gsub("\"","").split(",")
-          transaction = stock_from_array stock.id,stock_info
+          stock_info = page.body.gsub("\"", "").split(",")
+          transaction = stock_from_array stock.id, stock_info
           puts "#{stock.id} to db"
           transaction.save
         rescue Exception => e
@@ -68,11 +71,11 @@ module Stock
     #  "142600", "10.42", "249194", "10.47", "112905", "10.48", "339800", "10.49",
     #  "477702", "10.50", "67300", "10.51", "2015-02-13", "15:03:03", "00;\n"]
 
-    def stock_from_array id,arr
+    def stock_from_array id, arr
       today = DateTime.parse(Time.now.to_s).strftime('%Y-%m-%d').to_s
-      transaction = Transaction.find_or_initialize_by(date:today,stock_id:id)
+      transaction = Transaction.find_or_initialize_by(date: today, stock_id: id)
       transaction.stock_id = id
-      transaction.open =  arr[1]
+      transaction.open = arr[1]
       transaction.closeprev = arr[2]
       transaction.close = arr[3]
       transaction.High = arr[4]
@@ -105,7 +108,45 @@ module Stock
     end
 
     def persist_sz_stocks
-      persist_stocks 'http://www.shdjt.com/sz.htm',"sz"
+      persist_stocks 'http://www.shdjt.com/sz.htm', "sz"
+    end
+
+    def persist_yahoo_history_stocks
+      Stock.all.each { |stock|
+        persist_one_stock_records stock
+      }
+    end
+
+    def persist_one_stock_records stock
+      agent = Mechanize.new
+      base = "http://ichart.finance.yahoo.com/table.csv?"
+      market = stock.market == "sh" ? "ss" : "sz"
+      year, month, day = Time.now.year, Time.now.month, Time.now.day
+      url = "#{base}s=#{stock.id}.#{market}&a=1&b=1&c=2000&d=#{month}&e=#{day}&f=#{year}&g=d&q=q&y=0&z=#{stock.id}.#{market}&x=.csv"
+      puts url
+      page = agent.get(url)
+      trading = CSV.parse(page.body, {:headers => TRUE})
+
+      current_time = Time.now
+      puts "start"
+      ActiveRecord::Base.transaction do
+        trading.each { |t|
+          persist_record stock.id,market,t
+        }
+      end
+      puts "end #{Time.now - current_time}"
+    rescue Exception => e
+      puts e.inspect
+    end
+
+    def persist_record id, market, record
+      cdate, open, high, low, close, volume = record[0], record[1], record[2], record[3], record[4], record[5]
+      sql = "replace into yahoo_records_#{market}(stock_id,cdate,open,high,low,close,volume) values('#{id}','#{cdate}',#{open},#{high},#{low},#{close},#{volume})"
+      if market == "ss"
+        YahooRecordSS.connection.execute sql
+      else
+        YahooRecordSZ.connection.execute sql
+      end
     end
   end
 end

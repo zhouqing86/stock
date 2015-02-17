@@ -1,2 +1,4 @@
 .RData
 .idea/*
+.DS_Store
+.Rhistory

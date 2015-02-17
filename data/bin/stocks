@@ -37,6 +37,13 @@ module Stock
           service.persist_stocks_info
         end
       end
+
+      subcommand 'records', 'Persist history records from yahoo' do
+        def execute
+          service.persist_yahoo_history_stocks
+        end
+      end
+
     private
       def service
         service_class.new

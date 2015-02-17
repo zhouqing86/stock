@@ -51,3 +51,30 @@ CREATE TABLE IF NOT EXISTS transaction(
 	time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 	PRIMARY KEY  (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+ CREATE TABLE IF NOT EXISTS yahoo_records_ss(
+    stock_id varchar(12) NOT NULL,
+    open decimal(10,2),
+    close decimal(10,2),
+    high decimal(10,2),
+    low decimal(10,2),
+    volume int(32),
+    cdate DATE,
+    time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY  (stock_id,cdate)
+ ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+ CREATE TABLE IF NOT EXISTS yahoo_records_sz(
+    stock_id varchar(12) NOT NULL,
+    open decimal(10,2),
+    close decimal(10,2),
+    high decimal(10,2),
+    low decimal(10,2),
+    volume int(32),
+    cdate DATE,
+    time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY  (stock_id,cdate)
+ ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+ ALTER TABLE yahoo_records_ss change volume volume bigint;
+ ALTER TABLE yahoo_records_sz change volume volume bigint;

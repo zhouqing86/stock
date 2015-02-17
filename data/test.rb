@@ -6,6 +6,9 @@ require 'mechanize'
 require 'nokogiri'
 require 'hpricot'
 require 'open-uri'
+require 'csv'
+require 'yahoo_record_ss'
+require 'yahoo_record_sz'
 
 puts "test"
 ActiveRecord::Base.establish_connection(
@@ -38,10 +41,49 @@ ActiveRecord::Base.establish_connection(
 # table = doc.search("#senfe")
 # puts "#{table.inspect}"
 
-agent = Mechanize.new
-page = agent.get('http://hq.sinajs.cn/list=sh601006')
-puts page.body.gsub("\"","").split(",")
+# agent = Mechanize.new
+# page = agent.get('http://hq.sinajs.cn/list=sh601006')
+# puts page.body.gsub("\"","").split(",")
+#
+# Stock.all.each{ |stock|
+#   puts stock.id
+# }
 
-Stock.all.each{ |stock|
-  puts stock.id
+def persist_record id, market, record
+  cdate, open, high, low, close, volume = record[0], record[1], record[2], record[3], record[4], record[5]
+  sql = "replace into yahoo_records_#{market}(stock_id,cdate,open,high,low,close,volume) values('#{id}','#{cdate}',#{open},#{high},#{low},#{close},#{volume})"
+  if market == "ss"
+    Stock::YahooRecordSS.connection.execute sql
+  else
+    Stock::YahooRecordSZ.connection.execute sql
+  end
+end
+
+agent = Mechanize.new
+file = File.new("fail_ids.txt")
+file.each_line{ |line|
+  begin
+    data = line.split(" ")
+    puts "#{data[0]} #{data[1]}"
+    page = agent.get(data[1])
+    if(data[0].to_i > 500000)
+      market = "ss"
+    else
+      market = "sz"
+    end
+    trading = CSV.parse(page.body, {:headers => TRUE})
+
+    current_time = Time.now
+    puts "start"
+    ActiveRecord::Base.transaction do
+      trading.each { |t|
+        persist_record data[0],market,t
+      }
+    end
+    puts "end #{Time.now - current_time}"
+    sleep(1)
+  rescue Exception => e
+    puts e.inspect
+  end
 }
+
