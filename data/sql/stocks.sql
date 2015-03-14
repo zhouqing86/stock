@@ -78,3 +78,5 @@ CREATE TABLE IF NOT EXISTS transaction(
 
  ALTER TABLE yahoo_records_ss change volume volume bigint;
  ALTER TABLE yahoo_records_sz change volume volume bigint;
+
+ALTER TABLE transaction change volume volume bigint;

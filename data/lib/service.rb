@@ -122,7 +122,7 @@ module Stock
       base = "http://ichart.finance.yahoo.com/table.csv?"
       market = stock.market == "sh" ? "ss" : "sz"
       year, month, day = Time.now.year, Time.now.month, Time.now.day
-      url = "#{base}s=#{stock.id}.#{market}&a=1&b=1&c=2000&d=#{month}&e=#{day}&f=#{year}&g=d&q=q&y=0&z=#{stock.id}.#{market}&x=.csv"
+      url = "#{base}s=#{stock.id}.#{market}&a=1&b=1&c=2015&d=#{month}&e=#{day}&f=#{year}&g=d&q=q&y=0&z=#{stock.id}.#{market}&x=.csv"
       puts url
       page = agent.get(url)
       trading = CSV.parse(page.body, {:headers => TRUE})

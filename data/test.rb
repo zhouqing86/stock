@@ -59,31 +59,46 @@ def persist_record id, market, record
   end
 end
 
-agent = Mechanize.new
-file = File.new("fail_ids.txt")
-file.each_line{ |line|
-  begin
-    data = line.split(" ")
-    puts "#{data[0]} #{data[1]}"
-    page = agent.get(data[1])
-    if(data[0].to_i > 500000)
-      market = "ss"
-    else
-      market = "sz"
-    end
-    trading = CSV.parse(page.body, {:headers => TRUE})
+# agent = Mechanize.new
+# file = File.new("fail_ids.txt")
+# file.each_line{ |line|
+#   begin
+#     data = line.split(" ")
+#     puts "#{data[0]} #{data[1]}"
+#     page = agent.get(data[1])
+#     if(data[0].to_i > 500000 || data[0] == "000001")
+#       market = "ss"
+#     else
+#       market = "sz"
+#     end
+#     trading = CSV.parse(page.body, {:headers => TRUE})
+#
+#     current_time = Time.now
+#     puts "start"
+#     ActiveRecord::Base.transaction do
+#       trading.each { |t|
+#         persist_record data[0],market,t
+#       }
+#     end
+#     puts "end #{Time.now - current_time}"
+#     sleep(1)
+#   rescue Exception => e
+#     puts e.inspect
+#   end
+# }
 
-    current_time = Time.now
-    puts "start"
-    ActiveRecord::Base.transaction do
-      trading.each { |t|
-        persist_record data[0],market,t
-      }
-    end
-    puts "end #{Time.now - current_time}"
-    sleep(1)
-  rescue Exception => e
-    puts e.inspect
-  end
-}
+# agent = Mechanize.new
+# page = agent.get("http://ichart.finance.yahoo.com/table.csv?s=000001.sz&a=1&b=1&c=2000&d=2&e=16&f=2015&g=d&q=q&y=0&z=000001.sz&x=.csv")
+# trading = CSV.parse(page.body, {:headers => TRUE})
+# ActiveRecord::Base.transaction do
+#       trading.each { |t|
+#         persist_record "000001","sz",t
+#       }
+# end
 
+stock = Stock::Stock.new
+stock.id = "000001"
+stock.name = "上海证券"
+stock.code = "SSEC"
+stock.market = "ss"
+stock.save
