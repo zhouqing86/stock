@@ -6,7 +6,10 @@ require 'hanzi_code'
 require 'transaction'
 require 'yahoo_record_ss'
 require 'yahoo_record_sz'
+require 'shdjt_sz'
+require 'shdjt_sh'
 require 'csv'
+require 'date'
 
 module Stock
   class Service
@@ -44,6 +47,116 @@ module Stock
         puts "persist:#{id},#{stock.name},#{stock.business},#{stock.code}"
         stock.save
       }
+    end
+
+    def persit_shdjt options
+      puts "persit_shdjt"
+      options["end_date"] ||= Date.today.strftime("%Y-%m-%d")
+      options["start_date"] ||= (Date.today - 60*7).strftime("%Y-%m-%d")
+      persist_shdjt_stocks "sh", options["start_date"], options["end_date"]
+      persist_shdjt_stocks "sz", options["start_date"], options["end_date"]
+    end
+
+    def page start_date, end_date
+      ( start_date .. end_date ).select {|d| (1..5).include?(d.wday) }.size / 20
+    end
+
+    def persist_shdjt_stocks market, start_date, end_date
+      url = "http://www.shdjt.com/gpdm.asp?gpdm="
+      Stock.where(:market=>"#{market}").each { |stock|
+        begin
+          current_time = Time.now
+          puts "start"
+          sql = "select stock_id,cdate from shdjt_#{market} where stock_id=#{stock.id} order by cdate desc limit 1"
+          records = market == "sh" ? ShdjtSH.find_by_sql(sql) : ShdjtSZ.find_by_sql(sql)
+          if records.size != 0 &&  records[0].cdate.strftime("%Y-%m-%d") >= end_date
+            puts "skip #{stock.id}, end_date:#{end_date}" 
+            next
+          end
+          # ActiveRecord::Base.transaction do
+            (1..15).reverse_each{ |index|
+                persist_shdjt_stock "#{url}#{stock.id}&page=#{index}",market,stock.id
+                sleep 3
+            }
+          # end
+          puts "end #{Time.now - current_time}"
+        rescue Exception=>e
+          puts e.inspect
+          raise "Exception"
+        end
+      }
+      # agent = Mechanize.new
+      # page = agent.get(url)
+      # trs = page.search('#senfe').search('tr')
+    end
+
+    def persist_shdjt_stock url, market, id
+        puts url
+        agent = Mechanize.new
+        page = agent.get(url)
+        trs = page.search('#senfe').search('tr')
+        trs.each { |tr|
+          tds = tr.search("td")
+          no = tds.first.inner_text.to_i
+          next if no==0
+          # stock_id = tds[2].inner_text
+          cdate = tds[0].inner_text
+          s = market == "sh" ? ShdjtSH.find_by(stock_id:id,cdate:cdate) : ShdjtSZ.find_by(stock_id:id,cdate:cdate)
+          next unless s.nil?
+
+          s = market == "sh" ? ShdjtSH.new : ShdjtSZ.new
+          s.stock_id = id
+          s.cdate = cdate
+          s.close = tds[4].inner_text.to_f
+          s.rise = tds[5].inner_text.to_f
+          s.ddx = tds[6].inner_text.to_f
+          s.ddy = tds[7].inner_text.to_f
+          s.ddz = tds[8].inner_text.to_f
+          s.net_amount = tds[9].inner_text.to_f
+          s.largest_residual_quantity = tds[10].inner_text.to_i
+          s.large_residual_quantity = tds[11].inner_text.to_i
+          s.mid_residual_quantity = tds[12].inner_text.to_i
+          s.small_residual_quantity = tds[13].inner_text.to_i
+          s.strength = tds[14].inner_text.to_f
+          s.zhudonglv = tds[15].inner_text.to_f
+          s.tongchilv = tds[16].inner_text.to_f
+          s.largest_residual = tds[17].inner_text.to_f
+          s.large_residual = tds[18].inner_text.to_f
+          s.mid_residual = tds[19].inner_text.to_f
+          s.small_residual = tds[20].inner_text.to_f
+          s.activeness = tds[21].inner_text.to_f
+          s.danshubi = tds[22].inner_text.to_f
+          s.ddx_5 = tds[23].inner_text.to_f
+          s.ddy_5 = tds[24].inner_text.to_f
+          s.ddx_60 = tds[25].inner_text.to_f
+          s.ddy_60 = tds[26].inner_text.to_f
+          s.ci = tds[27].inner_text.to_i
+          s.lian = tds[28].inner_text.to_i
+          s.xiaodanchashou = tds[29].inner_text.to_i
+          s.zijinqiangdu = tds[30].inner_text.to_i
+          s.buy_amount = tds[31].inner_text.to_i
+          s.sale_amount = tds[32].inner_text.to_i
+          s.buy_per_average = tds[33].inner_text.to_f
+          s.sale_per_average = tds[34].inner_text.to_f
+          s.xiaodanleiji = tds[35].inner_text.to_i
+          s.jingeleiji = tds[36].inner_text.to_i
+          s.largest_buy = tds[37].inner_text.to_f
+          s.largest_sale = tds[38].inner_text.to_f
+          s.large_buy = tds[39].inner_text.to_f
+          s.large_sale = tds[40].inner_text.to_f
+          s.mid_buy = tds[41].inner_text.to_f
+          s.mid_sale = tds[42].inner_text.to_f
+          s.small_buy = tds[43].inner_text.to_f
+          s.small_sale = tds[44].inner_text.to_f
+          s.huanshoulv = tds[45].inner_text.to_f
+          s.liangbi = tds[46].inner_text.to_f
+          s.price_earning_rate = tds[47].inner_text.to_f
+          s.earnings_per_share = tds[48].inner_text.to_f
+
+          puts "persist:#{s.stock_id},#{s.cdate},#{s.ddx},#{s.ddy},#{s.ddz} persist to db"
+          s.save
+        }
+
     end
 
     def persist_stocks_info

@@ -9,6 +9,9 @@ require 'open-uri'
 require 'csv'
 require 'yahoo_record_ss'
 require 'yahoo_record_sz'
+require 'shdjt_sz'
+require 'shdjt_sh'
+require 'date'
 
 puts "test"
 ActiveRecord::Base.establish_connection(
@@ -49,15 +52,15 @@ ActiveRecord::Base.establish_connection(
 #   puts stock.id
 # }
 
-def persist_record id, market, record
-  cdate, open, high, low, close, volume = record[0], record[1], record[2], record[3], record[4], record[5]
-  sql = "replace into yahoo_records_#{market}(stock_id,cdate,open,high,low,close,volume) values('#{id}','#{cdate}',#{open},#{high},#{low},#{close},#{volume})"
-  if market == "ss"
-    Stock::YahooRecordSS.connection.execute sql
-  else
-    Stock::YahooRecordSZ.connection.execute sql
-  end
-end
+# def persist_record id, market, record
+#   cdate, open, high, low, close, volume = record[0], record[1], record[2], record[3], record[4], record[5]
+#   sql = "replace into yahoo_records_#{market}(stock_id,cdate,open,high,low,close,volume) values('#{id}','#{cdate}',#{open},#{high},#{low},#{close},#{volume})"
+#   if market == "ss"
+#     Stock::YahooRecordSS.connection.execute sql
+#   else
+#     Stock::YahooRecordSZ.connection.execute sql
+#   end
+# end
 
 # agent = Mechanize.new
 # file = File.new("fail_ids.txt")
@@ -96,9 +99,30 @@ end
 #       }
 # end
 
-stock = Stock::Stock.new
-stock.id = "000001"
-stock.name = "上海证券"
-stock.code = "SSEC"
-stock.market = "ss"
-stock.save
+# stock = Stock::Stock.new
+# stock.id = "000001"
+# stock.name = "上海证券"
+# stock.code = "SSEC"
+# stock.market = "ss"
+# stock.
+
+
+# agent = Mechanize.new
+# url = "http://www.shdjt.com/gpdm.asp?gpdm=600007&page=1"
+# page = agent.get(url)
+# trs = page.search('#senfe').search('tr')
+# trs.each { |tr|
+#         tds = tr.search("td")
+#         no = tds.first.inner_text.to_i
+#         next if no==0
+#         id = tds[2].inner_text
+#         # stock.code = code(stock.name)
+#         puts "persist:#{id}"
+#         # stock.save
+# }
+
+stocks = Stock::ShdjtSH.find_by_sql("select stock_id,cdate from shdjt_sh where stock_id=600000 order by cdate desc limit 1")
+p stocks.size
+p stocks[0].stock_id
+p stocks[0].cdate.strftime("%Y-%m-%d")
+# ShdjtSH.select("stock_id,cdate").find_by(stock_id:"600016").order("end_date DESC")

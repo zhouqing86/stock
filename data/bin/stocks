@@ -6,6 +6,7 @@ $LOAD_PATH << File.expand_path('../../lib', __FILE__)
 require 'clamp'
 require 'version'
 require 'service'
+require 'date'
 
 $stdout.sync = true
 $stderr.sync = true
@@ -35,6 +36,15 @@ module Stock
       subcommand 'transaction', 'Persist current day active stock info' do
         def execute
           service.persist_stocks_info
+        end
+      end
+
+      subcommand 'shdjt', 'Persist shdjt stock info' do
+        option ["-e", "--enddate"], "[date]", "end date", :default => Date.today.strftime("%Y-%m-%d")
+        option ["-s", "--startdate"], "[date]", "start date", :default => (Date.today - 60*7).strftime("%Y-%m-%d") 
+        def execute
+          h = { "end_date" => enddate, "start_date" => startdate }
+          service.persit_shdjt h
         end
       end
 
