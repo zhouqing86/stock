@@ -51,14 +51,16 @@ module Stock
 
     def persit_shdjt options
       puts "persit_shdjt"
-      options["end_date"] ||= Date.today.strftime("%Y-%m-%d")
-      options["start_date"] ||= (Date.today - 60*7).strftime("%Y-%m-%d")
+      options["end_date"] ||= Date.today
+      options["start_date"] ||= (Date.today - 60*7)
       persist_shdjt_stocks "sh", options["start_date"], options["end_date"]
       persist_shdjt_stocks "sz", options["start_date"], options["end_date"]
     end
 
     def page start_date, end_date
-      ( start_date .. end_date ).select {|d| (1..5).include?(d.wday) }.size / 20
+      size = ( start_date .. end_date ).select {|d| (1..5).include?(d.wday) }.size 
+      size = size / 20
+      size == 0 ? 1 : size
     end
 
     def persist_shdjt_stocks market, start_date, end_date
@@ -69,20 +71,21 @@ module Stock
           puts "start"
           sql = "select stock_id,cdate from shdjt_#{market} where stock_id=#{stock.id} order by cdate desc limit 1"
           records = market == "sh" ? ShdjtSH.find_by_sql(sql) : ShdjtSZ.find_by_sql(sql)
-          if records.size != 0 &&  records[0].cdate.strftime("%Y-%m-%d") >= end_date
+          if records.size != 0 &&  records[0].cdate.strftime("%Y-%m-%d") >= end_date.strftime("%Y-%m-%d")
             puts "skip #{stock.id}, end_date:#{end_date}" 
             next
           end
+          page_num = page start_date, end_date
           # ActiveRecord::Base.transaction do
-            (1..15).reverse_each{ |index|
+            (1..page_num).reverse_each{ |index|
                 persist_shdjt_stock "#{url}#{stock.id}&page=#{index}",market,stock.id
-                sleep 3
+                sleep 2
             }
           # end
           puts "end #{Time.now - current_time}"
         rescue Exception=>e
           puts e.inspect
-          raise "Exception"
+          # raise "Exception"
         end
       }
       # agent = Mechanize.new

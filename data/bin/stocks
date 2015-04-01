@@ -41,9 +41,9 @@ module Stock
 
       subcommand 'shdjt', 'Persist shdjt stock info' do
         option ["-e", "--enddate"], "[date]", "end date", :default => Date.today.strftime("%Y-%m-%d")
-        option ["-s", "--startdate"], "[date]", "start date", :default => (Date.today - 60*7).strftime("%Y-%m-%d") 
+        option ["-s", "--startdate"], "[date]", "start date", :default => (Date.today - 60*7).strftime("%Y-%m-%d")
         def execute
-          h = { "end_date" => enddate, "start_date" => startdate }
+          h = { "end_date" => Date.parse(enddate), "start_date" => Date.parse(startdate) }
           service.persit_shdjt h
         end
       end
