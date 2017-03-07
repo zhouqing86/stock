@@ -1,5 +1,6 @@
 GEM
   remote: https://ruby.taobao.org/
+  remote: https://rubygems.org/
   specs:
     activemodel (4.1.8)
       activesupport (= 4.1.8)
@@ -66,3 +67,6 @@ DEPENDENCIES
   mysql2
   nokogiri
   rake
+
+BUNDLED WITH
+   1.10.6
